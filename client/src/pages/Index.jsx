@@ -142,7 +142,7 @@ const Index = () => {
           // scrollIntoView options:
           // 'smooth' for animation
           // 'start' aligns the top of the element with the top of the viewport
-          contactSectionRef.current.scrollIntoView({
+          aboutSectionRef.current.scrollIntoView({
             behavior: "smooth",
             block: "start",
           });
