@@ -20,7 +20,7 @@ export const signup = async (req, res) => {
     });
   } catch (error) {
     console.log("error: " + error.message);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({ message: "Internal Server Errors" });
   }
 };
 
