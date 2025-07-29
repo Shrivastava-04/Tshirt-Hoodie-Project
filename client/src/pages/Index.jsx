@@ -138,7 +138,7 @@ const Index = () => {
     if (location.hash === "#about") {
       // Use requestAnimationFrame for smoother scroll in case of rapid events
       requestAnimationFrame(() => {
-        if (contactSectionRef.current) {
+        if (aboutSectionRef.current) {
           // scrollIntoView options:
           // 'smooth' for animation
           // 'start' aligns the top of the element with the top of the viewport
@@ -500,7 +500,7 @@ const Index = () => {
 
             {/* Contact Information */}
             <section
-              ref={contactSectionRef}
+              ref={aboutSectionRef}
               id="about"
               className="py-20 bg-primary"
             >
