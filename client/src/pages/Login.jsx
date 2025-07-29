@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
+import axios from "axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -16,15 +17,100 @@ const Login = () => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const validateEmail = (email) => {
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return emailRegex.test(email);
+  };
 
   // Removed type annotation for 'e'
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
+    let newErrors = {};
+    if (formData.email.trim() === "") {
+      newErrors.email = "Email is required.";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+    if (formData.password.trim() === "") {
+      newErrors.password = "Password is required.";
+    }
+
+    setErrors(newErrors);
+    // console.log(newErrors);
+
+    const errorKeys = Object.keys(newErrors);
+    if (errorKeys.length > 0) {
+      setIsLoading(false);
+
+      let toastDescription = "";
+      if (errorKeys.length === 1) {
+        // If only one error, show its specific message
+        toastDescription = newErrors[errorKeys[0]];
+      } else {
+        // If multiple errors, provide a summary or list
+        toastDescription = (
+          <div className="flex flex-col gap-1">
+            <p>Please correct the following errors:</p>
+            <ul className="list-disc pl-5">
+              {Object.values(newErrors).map((msg, index) => (
+                <li key={index}>{msg}</li>
+              ))}
+            </ul>
+          </div>
+        );
+        // Alternative for multiple errors (simpler string):
+        // toastDescription = "Please correct multiple errors in the form.";
+      }
+
+      toast({
+        title: "Validation Error",
+        description: toastDescription,
+        variant: "destructive",
+        duration: 5000, // Show longer for detailed messages
+      });
+      return; // Stop form submission
+    }
+
     // Simulate API call
+
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/user/login`,
+        formData
+      );
+      console.log(response);
+      if (response.status === 200) {
+        toast({
+          title: "Success",
+          description: "Login successful!",
+          variant: "success",
+        });
+        // Optionally, you can store user data in localStorage or context
+        localStorage.setItem("userId", JSON.stringify(response.data.user._id));
+      } else {
+        toast({
+          title: "Error",
+          description: "Login failed. Please check your credentials.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      toast({
+        title: "Error",
+        description: "An error occurred while logging in. Please try again.",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
     setTimeout(() => {
       toast({
         title: "Welcome back!",
