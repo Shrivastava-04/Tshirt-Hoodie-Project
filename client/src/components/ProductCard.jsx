@@ -5,16 +5,23 @@ import { Card, CardContent } from "@/components/ui/card";
 
 // Removed the interface ProductCardProps as it is TypeScript-specific.
 
-const ProductCard = ({
-  id,
-  name,
-  price,
-  originalPrice,
-  image,
-  category,
-  isNew = false,
-  onSale = false,
-}) => {
+const ProductCard = ({ product }) => {
+  if (!product) {
+    console.error("ProductCard received an undefined or null product prop!");
+    return null; // Don't render if product is bad
+  }
+  console.log(product);
+  const {
+    id,
+    name,
+    price,
+    originalPrice,
+    image,
+    category,
+    isNew = false,
+    onSale = false,
+  } = product;
+  console.log(id, name, price, originalPrice, image, category, isNew, onSale);
   return (
     <Card className="group product-card overflow-hidden border-border/50 bg-card/50">
       <div className="relative overflow-hidden">

@@ -348,6 +348,10 @@ const Explore = () => {
           </div>
         </div>
       </div>
+      <div>
+        {/* <img src={hoodieImage} alt="" />
+        <img src={tshirtImage} alt="" /> */}
+      </div>
 
       <Footer />
     </div>

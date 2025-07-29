@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger"; // Keep this as it's in your d
 export default ({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: 5173,
   },
   plugins: [
     // Ensure react() is always the first plugin in the array

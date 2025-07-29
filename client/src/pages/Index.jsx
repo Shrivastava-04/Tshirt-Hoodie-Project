@@ -51,7 +51,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       {/* Hero Section */}
       <HeroSection />
 
@@ -63,13 +63,14 @@ const Index = () => {
               Featured Products
             </h2>
             <p className="text-foreground/70 max-w-2xl mx-auto">
-              Discover our most popular pieces, carefully selected to elevate your streetwear game
+              Discover our most popular pieces, carefully selected to elevate
+              your streetwear game
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
             {featuredProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
 
@@ -106,7 +107,7 @@ const Index = () => {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                
+
                 <CardContent className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h3 className="text-2xl font-bold text-foreground mb-2">
                     Explore Hoodies
@@ -133,7 +134,7 @@ const Index = () => {
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-                
+
                 <CardContent className="absolute bottom-0 left-0 right-0 p-6 text-center">
                   <h3 className="text-2xl font-bold text-foreground mb-2">
                     Explore T-Shirts
@@ -162,7 +163,8 @@ const Index = () => {
               Stay in the Loop
             </h2>
             <p className="text-foreground/70 text-lg">
-              Be the first to know about new drops, exclusive offers, and street style inspiration
+              Be the first to know about new drops, exclusive offers, and street
+              style inspiration
             </p>
             <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
               <input
