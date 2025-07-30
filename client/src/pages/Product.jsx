@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Heart, Share, ShoppingCart, ArrowLeft, Plus, Minus, Star, Truck, RotateCcw, Shield } from "lucide-react";
+import {
+  Heart,
+  Share,
+  ShoppingCart,
+  ArrowLeft,
+  Plus,
+  Minus,
+  Star,
+  Truck,
+  RotateCcw,
+  Shield,
+} from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
@@ -16,8 +27,9 @@ const Product = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [selectedSize, setSelectedSize] = useState("");
+  const [selectedVariety, setSelectedVariety] = useState("Round Neck");
   const [selectedColor, setSelectedColor] = useState("Black");
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -28,9 +40,12 @@ const Product = () => {
     name: "Urban Essential Hoodie",
     price: 89,
     originalPrice: 120,
-    description: "Elevate your street style with our premium Urban Essential Hoodie. Crafted from high-quality cotton blend for maximum comfort and durability. Features a minimalist design that speaks volumes about your refined taste in streetwear.",
+    description:
+      "Elevate your street style with our premium Urban Essential Hoodie. Crafted from high-quality cotton blend for maximum comfort and durability. Features a minimalist design that speaks volumes about your refined taste in streetwear.",
     images: [hoodieImage, hoodieImage, hoodieImage],
     sizes: ["S", "M", "L", "XL", "XXL"],
+    // typeOfProduct: "Hoodie",
+    varietyOfProduct: ["Round Neck", "Over Size", "Polo", "Hoodie", "Zipper"],
     colors: [
       { name: "Black", value: "#000000" },
       { name: "White", value: "#FFFFFF" },
@@ -49,12 +64,12 @@ const Product = () => {
       "Machine washable",
     ],
     specifications: {
-      "Material": "80% Cotton, 20% Polyester",
-      "Weight": "350 GSM",
-      "Fit": "Regular",
+      Material: "80% Cotton, 20% Polyester",
+      Weight: "350 GSM",
+      Fit: "Regular",
       "Model Height": "6'0\" wearing size M",
-      "Care": "Machine wash cold, tumble dry low",
-    }
+      Care: "Machine wash cold, tumble dry low",
+    },
   };
 
   // Related products
@@ -120,7 +135,7 @@ const Product = () => {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-8">
         {/* Back Button */}
         <Button
@@ -143,7 +158,7 @@ const Product = () => {
                 className="w-full h-full object-cover"
               />
             </div>
-            
+
             {/* Thumbnail Images */}
             <div className="grid grid-cols-3 gap-4">
               {product.images.map((image, index) => (
@@ -151,8 +166,8 @@ const Product = () => {
                   key={index}
                   onClick={() => setSelectedImage(index)}
                   className={`aspect-square overflow-hidden rounded-lg border-2 transition-all ${
-                    selectedImage === index 
-                      ? "border-accent" 
+                    selectedImage === index
+                      ? "border-accent"
                       : "border-border/50 hover:border-accent/50"
                   }`}
                 >
@@ -185,11 +200,11 @@ const Product = () => {
                   </Badge>
                 )}
               </div>
-              
+
               <h1 className="text-3xl font-bold text-foreground mb-2">
                 {product.name}
               </h1>
-              
+
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
                   <span className="text-2xl font-bold text-accent">
@@ -201,7 +216,7 @@ const Product = () => {
                     </span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center gap-1">
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
@@ -220,18 +235,47 @@ const Product = () => {
                   </span>
                 </div>
               </div>
-              
+
               <p className="text-foreground/70 leading-relaxed">
                 {product.description}
               </p>
             </div>
 
+            {/* Variety Details */}
+            <div>
+              <h3 className="font-semibold mb-3">Type</h3>
+              <div className="gap-6 flex">
+                {product.varietyOfProduct.map((variety, index) => (
+                  <>
+                    <Button
+                      key={index}
+                      // onClick={() => setSelectedVariety(variety)}
+                      className={`aspect-square border rounded-md text-sm font-medium transition-all ${
+                        selectedVariety === variety
+                          ? "border-accent bg-accent text-accent-foreground"
+                          : "border-border hover:border-accent/50 hover:bg-accent/10"
+                      }
+                          ${
+                            variety !== "Round Neck"
+                              ? "opacity-80 cursor-not-allowed"
+                              : "opacity-100"
+                          } 
+                      
+                      `}
+                    >
+                      {variety}
+                    </Button>
+                  </>
+                ))}
+              </div>
+            </div>
+
             {/* Size Selection */}
             <div>
               <h3 className="font-semibold mb-3">Size</h3>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="gap-6 flex">
                 {product.sizes.map((size) => (
-                  <button
+                  <Button
                     key={size}
                     onClick={() => setSelectedSize(size)}
                     className={`aspect-square border rounded-md text-sm font-medium transition-all ${
@@ -241,7 +285,7 @@ const Product = () => {
                     }`}
                   >
                     {size}
-                  </button>
+                  </Button>
                 ))}
               </div>
             </div>
@@ -300,7 +344,7 @@ const Product = () => {
                   Buy Now
                 </Button>
               </div>
-              
+
               <div className="flex justify-center gap-4">
                 <Button variant="ghost" size="icon">
                   <Heart className="h-4 w-4" />
@@ -319,21 +363,27 @@ const Product = () => {
                     <Truck className="h-5 w-5 text-accent" />
                     <div>
                       <p className="font-medium text-sm">Free Shipping</p>
-                      <p className="text-xs text-muted-foreground">On orders over $75</p>
+                      <p className="text-xs text-muted-foreground">
+                        On orders over $75
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-col items-center space-y-2">
                     <RotateCcw className="h-5 w-5 text-accent" />
                     <div>
                       <p className="font-medium text-sm">Easy Returns</p>
-                      <p className="text-xs text-muted-foreground">30-day return policy</p>
+                      <p className="text-xs text-muted-foreground">
+                        30-day return policy
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-col items-center space-y-2">
                     <Shield className="h-5 w-5 text-accent" />
                     <div>
                       <p className="font-medium text-sm">Secure Payment</p>
-                      <p className="text-xs text-muted-foreground">256-bit SSL encryption</p>
+                      <p className="text-xs text-muted-foreground">
+                        256-bit SSL encryption
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -350,14 +400,19 @@ const Product = () => {
               <TabsTrigger value="specs">Specifications</TabsTrigger>
               <TabsTrigger value="reviews">Reviews</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="details" className="mt-6">
               <Card className="bg-card/50 border-border/50">
                 <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">Product Features</h3>
+                  <h3 className="font-semibold text-lg mb-4">
+                    Product Features
+                  </h3>
                   <ul className="space-y-2">
                     {product.features.map((feature, index) => (
-                      <li key={index} className="flex items-center text-foreground/80">
+                      <li
+                        key={index}
+                        className="flex items-center text-foreground/80"
+                      >
                         <span className="w-2 h-2 bg-accent rounded-full mr-3 flex-shrink-0" />
                         {feature}
                       </li>
@@ -366,30 +421,38 @@ const Product = () => {
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="specs" className="mt-6">
               <Card className="bg-card/50 border-border/50">
                 <CardContent className="p-6">
                   <h3 className="font-semibold text-lg mb-4">Specifications</h3>
                   <div className="space-y-3">
-                    {Object.entries(product.specifications).map(([key, value]) => (
-                      <div key={key} className="flex justify-between py-2 border-b border-border/30 last:border-b-0">
-                        <span className="font-medium">{key}:</span>
-                        <span className="text-foreground/80">{value}</span>
-                      </div>
-                    ))}
+                    {Object.entries(product.specifications).map(
+                      ([key, value]) => (
+                        <div
+                          key={key}
+                          className="flex justify-between py-2 border-b border-border/30 last:border-b-0"
+                        >
+                          <span className="font-medium">{key}:</span>
+                          <span className="text-foreground/80">{value}</span>
+                        </div>
+                      )
+                    )}
                   </div>
                 </CardContent>
               </Card>
             </TabsContent>
-            
+
             <TabsContent value="reviews" className="mt-6">
               <Card className="bg-card/50 border-border/50">
                 <CardContent className="p-6">
                   <div className="text-center py-8">
-                    <h3 className="font-semibold text-lg mb-2">Customer Reviews</h3>
+                    <h3 className="font-semibold text-lg mb-2">
+                      Customer Reviews
+                    </h3>
                     <p className="text-foreground/70 mb-4">
-                      {product.rating} out of 5 stars ({product.reviews} reviews)
+                      {product.rating} out of 5 stars ({product.reviews}{" "}
+                      reviews)
                     </p>
                     <Button variant="outline">Write a Review</Button>
                   </div>
@@ -406,7 +469,10 @@ const Product = () => {
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {relatedProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
+              <>
+                <ProductCard key={product.id} product={product} />
+                {/* <div>Hello</div> */}
+              </>
             ))}
           </div>
         </div>
