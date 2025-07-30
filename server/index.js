@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
 
 const PORT = process.env.PORT;
 const URI = process.env.MongoDB_URI;
-const FRONTEND_URL = process.env.FRONTEND_URL;
+const FRONTEND_URL = process.env.Frontend_URL;
 
 app.use(
   cors({
