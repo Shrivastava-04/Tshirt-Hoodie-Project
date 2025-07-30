@@ -158,10 +158,10 @@ const Signup = () => {
 
       console.log("Signup API Success Response:", response.data);
 
-      if (response.data.user) {
-        login(response.data.user); // <--- Use login from AuthContext
-      }
-
+      // if (response.data.user) {
+      //   login(response.data.user); // <--- Use login from AuthContext
+      // }
+      localStorage.setItem("userId", JSON.stringify(response.data.user._id)); // Store user data in localStorage
       toast({
         title: "Success",
         description:
@@ -171,7 +171,9 @@ const Signup = () => {
       });
 
       // Navigate immediately after success toast
-      navigate("/");
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (error) {
       console.error("Signup API error:", error);
 

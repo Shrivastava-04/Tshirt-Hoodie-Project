@@ -110,7 +110,7 @@ export const login = async (req, res) => {
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Invalid Password" });
     }
-    generateTokenAndSetCookie(user._id, res); // Generate and set token in cookies
+    // generateTokenAndSetCookie(user._id, res); // Generate and set token in cookies
     // Optionally, you can return user data without password
     res.status(200).json({
       message: "Login Successful",
@@ -183,7 +183,12 @@ export const getUserProfileUsingId = async (req, res) => {
     }
     res.status(200).json({
       message: "User profile fetched successfully",
-      user: user,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+      },
     });
   } catch (error) {
     console.log("error: " + error.message);

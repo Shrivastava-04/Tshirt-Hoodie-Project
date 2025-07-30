@@ -94,7 +94,8 @@ const Login = () => {
         // Optionally, you can store user data in localStorage or context
         // localStorage.setItem("userId", JSON.stringify(response.data.user._id));
         // if (response.data.user) {
-        login(response.data.user); // Call the login function from AuthContext
+        // login(response.data.user); // Call the login function from AuthContext
+        localStorage.setItem("userId", JSON.stringify(response.data.user.id)); // Store user ID in localStorage
         // }
         setTimeout(() => {
           toast({

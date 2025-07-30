@@ -11,7 +11,7 @@ const Header = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   // const userId = localStorage.getItem("userId") || "";
   const navigate = useNavigate();
-  const { user, isUserAuthenticated, loading } = useAuth(); // Use the useAuth hook to get user and authentication status
+  // const { user, isUserAuthenticated, loading } = useAuth(); // Use the useAuth hook to get user and authentication status
 
   const navItems = [
     { name: "New Arrivals", href: "/explore?category=new" },
@@ -30,7 +30,7 @@ const Header = () => {
   };
 
   const handleProfileClick = () => {
-    if (isUserAuthenticated) {
+    if (localStorage.getItem("userId")) {
       navigate("/profile");
     } else {
       navigate("/login");
