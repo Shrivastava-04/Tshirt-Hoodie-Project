@@ -2,7 +2,7 @@ import User from "../models/user.model.js";
 import bcrypt, { hash } from "bcryptjs";
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || "jwtsecretkey";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const generateTokenAndSetCookie = (userId, res) => {
   const token = jwt.sign({ userId }, JWT_SECRET, { expiresIn: "1h" });
