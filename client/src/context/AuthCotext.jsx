@@ -20,7 +20,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loadingInitialUser, setLoadingInitialUser] = useState(true);
-  const API_BASE_URL = "http://localhost:4000";
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
 
   // Configure Axios to send cookies with requests
   axios.defaults.withCredentials = true; // Enable sending cookies with requests

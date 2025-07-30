@@ -22,6 +22,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { login } = useAuth(); // Use the login function from AuthContext
+  const Base_URL = import.meta.env.VITE_BACKEND_URL;
 
   const validateEmail = (email) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -82,10 +83,7 @@ const Login = () => {
     // Simulate API call
 
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/user/login`,
-        formData
-      );
+      const response = await axios.post(`${Base_URL}/user/login`, formData);
       console.log(response);
       if (response.status === 200) {
         toast({

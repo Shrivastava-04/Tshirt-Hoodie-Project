@@ -25,6 +25,7 @@ const Signup = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const Base_URL = import.meta.env.VITE_BACKEND_URL;
   // Get the 'login' function from AuthContext to set user state after signup
   const { login } = useAuth(); // <--- Corrected: Using 'login'
 
@@ -153,10 +154,7 @@ const Signup = () => {
 
     // --- If client-side validation passes, attempt API call ---
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/user/signup`,
-        formData
-      );
+      const response = await axios.post(`${Base_URL}/user/signup`, formData);
 
       console.log("Signup API Success Response:", response.data);
 
