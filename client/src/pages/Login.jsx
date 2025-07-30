@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import axios from "axios";
+import { useAuth } from "@/context/AuthCotext.jsx"; // Import the useAuth hook
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +21,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { login } = useAuth(); // Use the login function from AuthContext
 
   const validateEmail = (email) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -92,7 +94,18 @@ const Login = () => {
           variant: "success",
         });
         // Optionally, you can store user data in localStorage or context
-        localStorage.setItem("userId", JSON.stringify(response.data.user._id));
+        // localStorage.setItem("userId", JSON.stringify(response.data.user._id));
+        // if (response.data.user) {
+        login(response.data.user); // Call the login function from AuthContext
+        // }
+        setTimeout(() => {
+          toast({
+            title: "Welcome back!",
+            description: "You've successfully logged in.",
+          });
+          setIsLoading(false);
+          navigate("/");
+        }, 1500);
       } else {
         toast({
           title: "Error",
@@ -110,15 +123,6 @@ const Login = () => {
       setIsLoading(false);
       return;
     }
-
-    setTimeout(() => {
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully logged in.",
-      });
-      setIsLoading(false);
-      navigate("/");
-    }, 1500);
   };
 
   // Removed type annotation for 'e'

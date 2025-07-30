@@ -4,12 +4,14 @@ import { Search, ShoppingCart, User, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import logo from "@/assets/logo.png";
+import { useAuth } from "@/context/AuthCotext.jsx"; // Import the useAuth hook
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const userId = localStorage.getItem("userId") || "";
+  // const userId = localStorage.getItem("userId") || "";
   const navigate = useNavigate();
+  const { user, isUserAuthenticated, loading } = useAuth(); // Use the useAuth hook to get user and authentication status
 
   const navItems = [
     { name: "New Arrivals", href: "/explore?category=new" },
@@ -28,7 +30,7 @@ const Header = () => {
   };
 
   const handleProfileClick = () => {
-    if (userId) {
+    if (isUserAuthenticated) {
       navigate("/profile");
     } else {
       navigate("/login");

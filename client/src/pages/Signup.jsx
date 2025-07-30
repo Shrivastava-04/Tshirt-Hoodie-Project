@@ -1,4 +1,4 @@
-import React, { useState } from "react"; // Explicitly import React
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo.png";
 import axios from "axios";
+// Corrected import path for AuthContext
+// import { useAuth } from "@/context/AuthContext.jsx"; // <--- Corrected path
+import { useAuth } from "@/context/AuthCotext.jsx"; // Import the useAuth hook
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -15,13 +18,15 @@ const Signup = () => {
     email: "",
     password: "",
     rememberMe: false,
-    phoneNumber: "7050975641",
+    phoneNumber: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
   const { toast } = useToast();
+  // Get the 'login' function from AuthContext to set user state after signup
+  const { login } = useAuth(); // <--- Corrected: Using 'login'
 
   const validateEmail = (email) => {
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -29,127 +34,45 @@ const Signup = () => {
   };
 
   const validatePassword = (password) => {
-    // Basic password validation: at least 8 characters
-    // You can add more complex rules (e.g., uppercase, lowercase, number, special char)
     return password.length >= 8;
   };
 
-  // Removed type annotation for 'e'
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    // console.log(e);
-    // console.log(formData);
-    let newErrors = {};
-    if (formData.name.trim() === "") {
-      newErrors.name = "Name is required.";
+  const validatePhoneNumber = (phoneNumber) => {
+    // This regex is more lenient, allowing for digits, spaces, hyphens, parentheses, plus sign.
+    // Adjust based on your required phone number format.
+    const phoneRegex = /^[+]?[\s\d\-\(\)]{7,20}$/; // Example: +1 (123) 456-7890
+    // If phone number is OPTIONAL in schema:
+    if (phoneNumber.trim() === "") {
+      return true; // Empty string is valid for an optional field
     }
-    if (formData.email.trim() === "") {
-      newErrors.email = "Email is required.";
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = "Please enter a valid email address.";
-    }
-    if (formData.password.trim() === "") {
-      newErrors.password = "Password is required.";
-    } else if (!validatePassword(formData.password)) {
-      newErrors.password = "Password must be at least 8 characters long.";
-    }
+    // If phone number is REQUIRED in schema:
+    // return phoneRegex.test(phoneNumber); // Must match format if not empty
 
-    setErrors(newErrors);
-    // console.log(newErrors);
-
-    const errorKeys = Object.keys(newErrors);
-    if (errorKeys.length > 0) {
-      setIsLoading(false);
-
-      let toastDescription = "";
-      if (errorKeys.length === 1) {
-        // If only one error, show its specific message
-        toastDescription = newErrors[errorKeys[0]];
-      } else {
-        // If multiple errors, provide a summary or list
-        toastDescription = (
-          <div className="flex flex-col gap-1">
-            <p>Please correct the following errors:</p>
-            <ul className="list-disc pl-5">
-              {Object.values(newErrors).map((msg, index) => (
-                <li key={index}>{msg}</li>
-              ))}
-            </ul>
-          </div>
-        );
-        // Alternative for multiple errors (simpler string):
-        // toastDescription = "Please correct multiple errors in the form.";
-      }
-
-      toast({
-        title: "Validation Error",
-        description: toastDescription,
-        variant: "destructive",
-        duration: 5000, // Show longer for detailed messages
-      });
-      return; // Stop form submission
-    }
-
-    // If all validations pass, proceed with API call simulation
-    // console.log("Form Data Validated and Submitted:", formData);
-
-    // Simulate API call
-    try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/user/signup`,
-        formData
-      );
-      console.log(response);
-      if (response.status === 201) {
-        toast({
-          title: "Success",
-          description: response.data.message,
-          variant: "success",
-        });
-        localStorage.setItem("userId", response.data.user._id);
-      }
-    } catch (error) {
-      console.log(error);
-      if (error.response && error.response.status === 400) {
-        toast({
-          title: "Error",
-          description: error.response.data.message || "User already exists.",
-          variant: "destructive",
-        });
-      }
-    }
-
-    setTimeout(() => {
-      toast({
-        title: "Welcome!",
-        description: "Your account has been created successfully.",
-      });
-      setIsLoading(false);
-      navigate("/");
-    }, 1500);
+    // Current logic reflects your schema's `required: true` for phoneNumber
+    return phoneRegex.test(phoneNumber); // If required, must validate
   };
 
-  // Removed type annotation for 'e'
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prevData) => ({
+      ...prevData,
       [name]: type === "checkbox" ? checked : value,
-    });
+    }));
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: "",
     }));
   };
 
-  // --- Handle Blur Function (for immediate feedback) ---
   const handleBlur = (e) => {
     const { name, value } = e.target;
     let errorMessage = "";
 
-    if (name === "email") {
+    if (name === "name") {
+      if (value.trim() === "") {
+        errorMessage = "Name is required.";
+      }
+    } else if (name === "email") {
       if (value.trim() === "") {
         errorMessage = "Email is required.";
       } else if (!validateEmail(value)) {
@@ -161,12 +84,10 @@ const Signup = () => {
       } else if (!validatePassword(value)) {
         errorMessage = "Password must be at least 8 characters long.";
       }
-    } else if (name === "name") {
-      if (value.trim() === "") {
-        errorMessage = "Name is required.";
-      }
     } else if (name === "phoneNumber") {
-      if (value.trim() !== "" && !validatePhoneNumber(value)) {
+      if (value.trim() === "") {
+        errorMessage = "Phone number is required."; // Based on your schema's `required: true`
+      } else if (!validatePhoneNumber(value)) {
         errorMessage = "Please enter a valid phone number.";
       }
     }
@@ -176,6 +97,125 @@ const Signup = () => {
       [name]: errorMessage,
     }));
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true); // Start loading at the very beginning
+
+    // --- Client-side Validation ---
+    let newErrors = {};
+    if (formData.name.trim() === "") newErrors.name = "Name is required.";
+    if (formData.email.trim() === "") {
+      newErrors.email = "Email is required.";
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
+    if (formData.password.trim() === "") {
+      newErrors.password = "Password is required.";
+    } else if (!validatePassword(formData.password)) {
+      newErrors.password = "Password must be at least 8 characters long.";
+    }
+    // Phone number validation for REQUIRED field
+    if (formData.phoneNumber.trim() === "") {
+      newErrors.phoneNumber = "Phone number is required.";
+    } else if (!validatePhoneNumber(formData.phoneNumber)) {
+      newErrors.phoneNumber = "Please enter a valid phone number.";
+    }
+
+    setErrors(newErrors); // Update state for inline error messages
+
+    const errorKeys = Object.keys(newErrors);
+    if (errorKeys.length > 0) {
+      setIsLoading(false); // Stop loading if validation fails
+      let toastDescription = "";
+      if (errorKeys.length === 1) {
+        toastDescription = newErrors[errorKeys[0]];
+      } else {
+        toastDescription = (
+          <div className="flex flex-col gap-1">
+            <p>Please correct the following errors:</p>
+            <ul className="list-disc pl-5">
+              {Object.values(newErrors).map((msg, index) => (
+                <li key={index}>{msg}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+      toast({
+        title: "Validation Error",
+        description: toastDescription,
+        variant: "destructive",
+        duration: 5000,
+      });
+      return; // Stop form submission here if validation fails
+    }
+
+    // --- If client-side validation passes, attempt API call ---
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/user/signup`,
+        formData
+      );
+
+      console.log("Signup API Success Response:", response.data);
+
+      if (response.data.user) {
+        login(response.data.user); // <--- Use login from AuthContext
+      }
+
+      toast({
+        title: "Success",
+        description:
+          response.data.message || "Account created successfully! Welcome.",
+        variant: "success",
+        duration: 3000,
+      });
+
+      // Navigate immediately after success toast
+      navigate("/");
+    } catch (error) {
+      console.error("Signup API error:", error);
+
+      let errorMessage = "An unexpected error occurred during signup.";
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage =
+            error.response.data.message ||
+            "Bad Request: Please check your input.";
+        } else if (error.response.status === 409) {
+          // Conflict: Email/phone already exists
+          errorMessage =
+            error.response.data.message ||
+            "A user with that email or phone number already exists.";
+        } else if (error.response.status === 500) {
+          errorMessage =
+            error.response.data.message ||
+            "Server error: Please try again later.";
+        } else {
+          errorMessage = `Error: ${error.response.status} - ${
+            error.response.data.message || "Unknown server response"
+          }`;
+        }
+      } else if (error.request) {
+        errorMessage =
+          "Network Error: Could not connect to the server. Please check your internet connection.";
+      } else {
+        errorMessage = error.message;
+      }
+
+      toast({
+        title: "Signup Failed",
+        description: errorMessage,
+        variant: "destructive",
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false); // Always reset loading state
+    }
+  };
+
+  // ... (rest of JSX, unchanged except placeholder/type for phoneNumber) ...
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -214,10 +254,14 @@ const Signup = () => {
                   type="text"
                   value={formData.name}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   required
                   className="bg-secondary/50"
-                  placeholder="Enter your email"
+                  placeholder="Enter your name"
                 />
+                {errors.name && (
+                  <p className="text-destructive text-sm mt-1">{errors.name}</p>
+                )}
               </div>
 
               {/* Email */}
@@ -234,10 +278,42 @@ const Signup = () => {
                   type="email"
                   value={formData.email}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   required
                   className="bg-secondary/50"
                   placeholder="Enter your email"
                 />
+                {errors.email && (
+                  <p className="text-destructive text-sm mt-1">
+                    {errors.email}
+                  </p>
+                )}
+              </div>
+
+              {/* Phone Number */}
+              <div>
+                <label
+                  htmlFor="phoneNumber"
+                  className="block text-sm font-medium mb-2"
+                >
+                  Phone Number
+                </label>
+                <Input
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  type="tel" // Changed to type="tel"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  required // Keep required if your schema still has it
+                  className="bg-secondary/50"
+                  placeholder="Enter your phone number"
+                />
+                {errors.phoneNumber && (
+                  <p className="text-destructive text-sm mt-1">
+                    {errors.phoneNumber}
+                  </p>
+                )}
               </div>
 
               {/* Password */}
@@ -255,6 +331,7 @@ const Signup = () => {
                     type={showPassword ? "text" : "password"}
                     value={formData.password}
                     onChange={handleChange}
+                    onBlur={handleBlur}
                     required
                     className="bg-secondary/50 pr-10"
                     placeholder="Enter new password"
@@ -273,6 +350,11 @@ const Signup = () => {
                     )}
                   </Button>
                 </div>
+                {errors.password && (
+                  <p className="text-destructive text-sm mt-1">
+                    {errors.password}
+                  </p>
+                )}
               </div>
 
               {/* Remember Me & Forgot Password */}
@@ -282,7 +364,6 @@ const Signup = () => {
                     id="rememberMe"
                     name="rememberMe"
                     checked={formData.rememberMe}
-                    // Removed type assertion 'as boolean'
                     onCheckedChange={(checked) =>
                       setFormData({ ...formData, rememberMe: checked })
                     }
@@ -328,6 +409,7 @@ const Signup = () => {
               {/* Social Login */}
               <div className="grid grid-cols-2 gap-4">
                 <Button variant="outline" className="w-full">
+                  {/* Google SVG */}
                   <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                     <path
                       fill="currentColor"
@@ -349,6 +431,7 @@ const Signup = () => {
                   Google
                 </Button>
                 <Button variant="outline" className="w-full">
+                  {/* Facebook SVG */}
                   <svg
                     className="w-4 h-4 mr-2"
                     fill="currentColor"
@@ -360,7 +443,7 @@ const Signup = () => {
                 </Button>
               </div>
 
-              {/* Sign Up Link */}
+              {/* Login Link */}
               <div className="text-center">
                 <p className="text-sm text-foreground/70">
                   Already have an account?{" "}
