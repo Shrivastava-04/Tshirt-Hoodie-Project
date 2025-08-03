@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -18,10 +18,30 @@ const userSchema = new mongoose.Schema(
     phoneNumber: {
       // <--- MODIFIED THIS BLOCK
       type: String,
-      unique: true,
       sparse: true, // <--- IMPORTANT: Allows multiple documents with null/undefined phoneNumber
       required: false, // <--- IMPORTANT: Makes phoneNumber optional
     },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    cartItem: [
+      {
+        productId: {
+          type: mongoose.Types.ObjectId,
+          ref: "Product",
+        },
+        quantity: {
+          type: Number,
+          default: 1,
+        },
+        size: {
+          type: String,
+          default: "S",
+        },
+      },
+    ],
   },
   { timestamps: true }
 ); // Added timestamps for good practice

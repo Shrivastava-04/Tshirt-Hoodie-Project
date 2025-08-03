@@ -1,7 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, Eye, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import axios from "axios";
 
 // Removed the interface ProductCardProps as it is TypeScript-specific.
 
@@ -12,21 +14,62 @@ const ProductCard = ({ product }) => {
   }
   // console.log(product);
   const {
-    id,
+    _id,
     name,
     price,
     originalPrice,
-    image,
+    images,
     category,
     isNew = false,
     onSale = false,
   } = product;
+
+  const userId = localStorage.getItem("userId")
+    ? localStorage.getItem("userId").replaceAll(/"/g, "")
+    : null;
+  const navigate = useNavigate();
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+  const { toast } = useToast();
+
+  const handleCartUpdate = async () => {
+    if (!userId) {
+      navigate("/login");
+    }
+    try {
+      const response = await axios.post(`${API_BASE_URL}/user/addToCart`, {
+        userId,
+        productId: _id,
+      });
+      console.log(response);
+      if (response.statusText === "OK") {
+        toast({
+          title: "Success",
+          description: "Item Added to Cart Successfully",
+          varient: "success",
+        });
+        navigate("/cart");
+      }
+    } catch (error) {
+      console.log(error);
+      // if (response.status(400)) {
+      toast({
+        title: error.response.statusText,
+        description: error.response.data.message,
+        variant: "destructive",
+      });
+      navigate("/cart");
+      // }
+    }
+
+    console.log("Add to cart");
+  };
+
   // console.log(id, name, price, originalPrice, image, category, isNew, onSale);
   return (
     <Card className="group product-card overflow-hidden border-border/50 bg-card/50">
       <div className="relative overflow-hidden">
         <img
-          src={image}
+          src={images[0]}
           alt={name}
           className="aspect-square w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
@@ -65,7 +108,11 @@ const ProductCard = ({ product }) => {
 
         {/* Add to Cart - Slides up on hover */}
         <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <Button variant="cta" className="w-full rounded-none">
+          <Button
+            variant="cta"
+            className="w-full rounded-none"
+            onClick={() => handleCartUpdate()}
+          >
             <ShoppingCart className="h-4 w-4 mr-2" />
             Add to Cart
           </Button>
@@ -77,16 +124,16 @@ const ProductCard = ({ product }) => {
           <p className="text-xs text-muted-foreground uppercase tracking-wide">
             {category}
           </p>
-          <Link to={`/product/${id}`}>
+          <Link to={`/product/${_id}`}>
             <h3 className="font-semibold text-foreground hover:text-accent transition-colors line-clamp-2">
               {name}
             </h3>
           </Link>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-accent">${price}</span>
+            <span className="text-lg font-bold text-accent">₹{price}</span>
             {originalPrice && (
               <span className="text-sm text-muted-foreground line-through">
-                ${originalPrice}
+                ₹{originalPrice}
               </span>
             )}
           </div>

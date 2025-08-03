@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Heart,
@@ -22,85 +22,127 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import hoodieImage from "@/assets/hoodie-1.jpg";
 import tshirtImage from "@/assets/tshirt-1.jpg";
+import axios from "axios";
 
 const Product = () => {
-  const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const userId = localStorage.getItem("userId").replaceAll(/"/g, "");
 
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedVariety, setSelectedVariety] = useState("Round Neck");
   const [selectedColor, setSelectedColor] = useState("Black");
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const { id } = useParams();
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [thisProductFromCart, setThisProductFromCart] = useState();
+  const [isProductInTheCart, setIsProductInTheCart] = useState(false);
+
+  useEffect(() => {
+    const getProduct = async () => {
+      if (!id) {
+        setError("Product ID is missing.");
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true); // Start loading
+        setError(null); // Clear previous errors
+
+        // --- Correct Axios GET syntax with URL parameter ---
+        const response = await axios.get(
+          `${API_BASE_URL}/product/productbyid/`, // <--- Correctly send ID in URL
+          { params: { id } }
+        );
+
+        // Axios automatically handles non-2xx status codes by throwing an error,
+        // so if we get here, the response was successful.
+        setProduct(response.data.product);
+      } catch (err) {
+        console.error("Error fetching product details:", err);
+        // Display a user-friendly error message based on the response
+        setError(
+          err.response?.data?.message || "Failed to fetch product details."
+        );
+      } finally {
+        setLoading(false); // End loading
+      }
+    };
+    const inTheCart = async () => {
+      if (!userId) {
+        return;
+      }
+      try {
+        const response = await axios.get(`${API_BASE_URL}/user/userById`, {
+          params: { id: userId },
+        });
+        console.log(response.data.user);
+        // setCartItems(response.data.user.cartItem);
+        const cartItem = response.data.user.cartItem;
+        // console.log(cartItem);
+        for (const product of cartItem) {
+          const idd = product.productId._id.replaceAll(/"/g, "");
+          if (idd === id) {
+            setIsProductInTheCart(true);
+            // console.log(true);
+            setThisProductFromCart(product);
+            setSelectedSize(product.size);
+            setQuantity(product.quantity);
+            console.log(product);
+            break;
+          }
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getProduct();
+    inTheCart();
+  }, [API_BASE_URL, id]);
 
   // Mock product data
-  const product = {
-    id: "1",
-    name: "Urban Essential Hoodie",
-    price: 89,
-    originalPrice: 120,
-    description:
-      "Elevate your street style with our premium Urban Essential Hoodie. Crafted from high-quality cotton blend for maximum comfort and durability. Features a minimalist design that speaks volumes about your refined taste in streetwear.",
-    images: [hoodieImage, hoodieImage, hoodieImage],
-    sizes: ["S", "M", "L", "XL", "XXL"],
-    // typeOfProduct: "Hoodie",
-    varietyOfProduct: ["Round Neck", "Over Size", "Polo", "Hoodie", "Zipper"],
-    colors: [
-      { name: "Black", value: "#000000" },
-      { name: "White", value: "#FFFFFF" },
-      { name: "Gray", value: "#808080" },
-    ],
-    category: "Hoodies",
-    isNew: true,
-    onSale: true,
-    rating: 4.8,
-    reviews: 127,
-    features: [
-      "Premium cotton blend fabric",
-      "Reinforced kangaroo pocket",
-      "Adjustable drawstring hood",
-      "Ribbed cuffs and hem",
-      "Machine washable",
-    ],
-    specifications: {
-      Material: "80% Cotton, 20% Polyester",
-      Weight: "350 GSM",
-      Fit: "Regular",
-      "Model Height": "6'0\" wearing size M",
-      Care: "Machine wash cold, tumble dry low",
-    },
-  };
+  // const products = {
+  //   id: "1",
+  //   name: "Urban Essential Hoodie",
+  //   price: 89,
+  //   originalPrice: 120,
+  //   description:
+  //     "Elevate your street style with our premium Urban Essential Hoodie. Crafted from high-quality cotton blend for maximum comfort and durability. Features a minimalist design that speaks volumes about your refined taste in streetwear.",
+  //   images: [hoodieImage, hoodieImage, hoodieImage],
+  //   sizes: ["S", "M", "L", "XL", "XXL"],
+  //   // typeOfProduct: "Hoodie",
+  //   varietyOfProduct: ["Round Neck", "Over Size", "Polo", "Hoodie", "Zipper"],
+  //   colors: [
+  //     { name: "Black", value: "#000000" },
+  //     { name: "White", value: "#FFFFFF" },
+  //     { name: "Gray", value: "#808080" },
+  //   ],
+  //   category: "Hoodies",
+  //   isNew: true,
+  //   onSale: true,
+  //   rating: 4.8,
+  //   reviews: 127,
+  //   features: [
+  //     "Premium cotton blend fabric",
+  //     "Reinforced kangaroo pocket",
+  //     "Adjustable drawstring hood",
+  //     "Ribbed cuffs and hem",
+  //     "Machine washable",
+  //   ],
+  //   specifications: {
+  //     Material: "80% Cotton, 20% Polyester",
+  //     Weight: "350 GSM",
+  //     Fit: "Regular",
+  //     "Model Height": "6'0\" wearing size M",
+  //     Care: "Machine wash cold, tumble dry low",
+  //   },
+  // };
 
-  // Related products
-  const relatedProducts = [
-    {
-      id: "2",
-      name: "Street Culture Tee",
-      price: 45,
-      image: tshirtImage,
-      category: "T-Shirts",
-      isNew: true,
-    },
-    {
-      id: "3",
-      name: "Midnight Black Hoodie",
-      price: 95,
-      image: hoodieImage,
-      category: "Hoodies",
-    },
-    {
-      id: "4",
-      name: "Graphic Statement Tee",
-      price: 39,
-      originalPrice: 55,
-      image: tshirtImage,
-      category: "T-Shirts",
-      onSale: true,
-    },
-  ];
-
-  const handleAddToCart = () => {
+  const handleAddToCart = async () => {
     if (!selectedSize) {
       toast({
         title: "Please select a size",
@@ -109,11 +151,35 @@ const Product = () => {
       });
       return;
     }
-
-    toast({
-      title: "Added to cart!",
-      description: `${product.name} (${selectedSize}) has been added to your cart.`,
-    });
+    if (!userId) {
+      navigate("/login");
+    }
+    try {
+      const response = await axios.post(`${API_BASE_URL}/user/addToCart`, {
+        userId,
+        productId: id,
+        initialQuantity: quantity,
+        InputSize: selectedSize,
+      });
+      console.log(response);
+      if (response.statusText === "OK") {
+        toast({
+          title: "Added to cart!",
+          description: `${product.name} (${selectedSize}) has been added to your cart.`,
+        });
+        navigate("/cart");
+      }
+    } catch (error) {
+      console.log(error);
+      // if (response.status(400)) {
+      toast({
+        title: error.response.statusText,
+        description: error.response.data.message,
+        variant: "destructive",
+      });
+      navigate("/cart");
+      // }
+    }
   };
 
   const handleBuyNow = () => {
@@ -131,8 +197,19 @@ const Product = () => {
       description: "Taking you to secure checkout...",
     });
   };
+  if (loading) {
+    return <div>Loading product details...</div>;
+  }
 
+  if (error) {
+    return <div className="text-destructive">Error: {error}</div>;
+  }
+
+  if (!product) {
+    return <div>No product found.</div>;
+  }
   return (
+    // <>jello</>
     <div className="min-h-screen bg-background">
       <Header />
 
@@ -162,7 +239,7 @@ const Product = () => {
             {/* Thumbnail Images */}
             <div className="grid grid-cols-3 gap-4">
               {product.images.map((image, index) => (
-                <button
+                <Button
                   key={index}
                   onClick={() => setSelectedImage(index)}
                   className={`aspect-square overflow-hidden rounded-lg border-2 transition-all ${
@@ -176,7 +253,7 @@ const Product = () => {
                     alt={`${product.name} view ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -259,8 +336,8 @@ const Product = () => {
                             variety !== "Round Neck"
                               ? "opacity-80 cursor-not-allowed"
                               : "opacity-100"
-                          } 
-                      
+                          }
+
                       `}
                     >
                       {variety}
@@ -336,13 +413,35 @@ const Product = () => {
             {/* Actions */}
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <Button variant="outline" size="lg" onClick={handleAddToCart}>
-                  <ShoppingCart className="h-4 w-4 mr-2" />
-                  Add to Cart
-                </Button>
-                <Button variant="cta" size="lg" onClick={handleBuyNow}>
-                  Buy Now
-                </Button>
+                {!isProductInTheCart && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      onClick={() => {
+                        handleAddToCart();
+                      }}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Add to Cart
+                    </Button>
+                    <Button variant="cta" size="lg" onClick={handleBuyNow}>
+                      Buy Now
+                    </Button>
+                  </>
+                )}
+                {isProductInTheCart && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={() => {
+                      navigate("/cart");
+                    }}
+                  >
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Go to Cart
+                  </Button>
+                )}
               </div>
 
               <div className="flex justify-center gap-4">
@@ -463,7 +562,7 @@ const Product = () => {
         </div>
 
         {/* Related Products */}
-        <div>
+        {/* <div>
           <h2 className="text-2xl font-bold gradient-text mb-8 text-center">
             You Might Also Like
           </h2>
@@ -471,11 +570,10 @@ const Product = () => {
             {relatedProducts.map((product) => (
               <>
                 <ProductCard key={product.id} product={product} />
-                {/* <div>Hello</div> */}
               </>
             ))}
           </div>
-        </div>
+        </div> */}
       </div>
 
       <Footer />

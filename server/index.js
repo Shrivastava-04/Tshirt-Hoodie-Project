@@ -3,6 +3,8 @@ import cors from "cors";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import userRoute from "./routes/user.routes.js";
+import productRoute from "./routes/product.routes.js";
+import adminRoute from "./routes/admin.routes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -35,6 +37,8 @@ try {
 }
 
 app.use("/user", userRoute);
+app.use("/product", productRoute);
+app.use("/admin", adminRoute);
 
 app.get("/", (req, res) => {
   res.send("Hell its working!");

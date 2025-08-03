@@ -13,19 +13,32 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Phone, MapPin, Clock } from "lucide-react";
+import axios from "axios";
 
 const Index = () => {
   const [heroBlur, setHeroBlur] = useState(0);
   const [heroOpacity, setHeroOpacity] = useState(1);
   const [sectionBackgroundOpacity, setSectionBackgroundOpacity] = useState(0); // Starts at 0, fully transparent
+  const [featuredProducts, setFeaturedProducts] = useState([]);
   const featuredProductsRef = useRef(null);
   const contactSectionRef = useRef(null); // <--- NEW REF for Contact Section
   const aboutSectionRef = useRef(null); // <--- NEW REF for About Section
   const topOfPageRef = useRef(null);
   const location = useLocation(); // <--- NEW: Get current location object
+  const API_BASE_URL = import.meta.env.VITE_BACKEND_URL;
+
+  //load Products
+  useEffect(() => {
+    const loadProducts = async () => {
+      const res = await axios.get(`${API_BASE_URL}/product/getallproduct`);
+      // console.log(res.data);
+      setFeaturedProducts(res.data);
+    };
+    loadProducts();
+  }, []);
 
   // Mock featured products (as per your original code)
-  const featuredProducts = [
+  const featuredProductsa = [
     {
       id: "1",
       name: "Urban Essential Hoodie",
@@ -247,7 +260,7 @@ const Index = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 animate-fade-in-up">
               {featuredProducts.map((product) => (
                 // Assuming ProductCard now handles the 'product' prop correctly as discussed previously
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product._id} product={product} />
               ))}
             </div>
 
@@ -287,7 +300,7 @@ const Index = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 animate-fade-in-up">
               {featuredProducts.map((product) => (
                 // Assuming ProductCard now handles the 'product' prop correctly as discussed previously
-                <ProductCard key={product.id} product={product} />
+                <ProductCard key={product._id} product={product} />
               ))}
             </div>
 

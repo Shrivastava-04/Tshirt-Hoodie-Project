@@ -23,6 +23,8 @@ const Cart = () => {
   const [user, setUser] = useState(null); // Local state for user data
   const [loading, setLoading] = useState(true); // Local loading state
   const [isUserAuthenticated, setIsUserAuthenticated] = useState(false); // Local authentication status
+  const [itemLoading, setItemLoading] = useState(false);
+  const [cartItems, setCartItems] = useState([]);
   const navigate = useNavigate(); // Use useNavigate hook for navigation
 
   // Get userId from localStorage (as per your current preference)
@@ -31,7 +33,7 @@ const Cart = () => {
   const API_BASE_URL = import.meta.env.VITE_BACKEND_URL; // Get API base URL
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserProfileAndCart = async () => {
       // If userId is missing, assume not authenticated
       if (!userId) {
         console.warn(
@@ -40,7 +42,7 @@ const Cart = () => {
         setLoading(false);
         setIsUserAuthenticated(false);
         // Consider navigating to login immediately here if no userId
-        // navigate('/login');
+        navigate("/login");
         return;
       }
 
@@ -79,59 +81,100 @@ const Cart = () => {
       } finally {
         setLoading(false); // Always set loading to false
       }
+      try {
+        setItemLoading(true);
+        const res = await axios.get(`${API_BASE_URL}/user/getCartDetails`, {
+          params: { userId },
+        });
+        console.log(res.data.cart);
+        // setCartItems(res.data.cart);
+        if (Array.isArray(res.data.cart)) {
+          setCartItems(res.data.cart);
+        } else {
+          // If the data is not a valid array, set to an empty array
+          setCartItems([]);
+        }
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setItemLoading(false);
+      }
     };
 
-    fetchUserProfile(); // Call the function to fetch user profile
+    fetchUserProfileAndCart(); // Call the function to fetch user profile
   }, [API_BASE_URL, userId, navigate]); // Dependencies for useEffect (include navigate if used in callback)
-
-  // Mock cart data. In a real app, this would come from a global state (Context/Redux)
-  // or fetched from a backend after a user logs in.
-  const [cartItems, setCartItems] = useState([
-    {
-      id: "prod1",
-      name: "Urban Essential Hoodie",
-      price: 89,
-      image: hoodieImage,
-      quantity: 1,
-    },
-    {
-      id: "prod2",
-      name: "Street Culture Tee",
-      price: 45,
-      image: tshirtImage,
-      quantity: 2,
-    },
-    {
-      id: "prod3",
-      name: "Midnight Black Hoodie",
-      price: 95,
-      image: hoodieImage,
-      quantity: 1,
-    },
-  ]);
 
   // Calculate total sum of items in the cart
   const totalAmount = useMemo(() => {
     return cartItems.reduce(
-      (total, item) => total + item.price * item.quantity,
+      (total, item) => total + item.productId.price * item.quantity,
       0
     );
   }, [cartItems]);
 
   // Handle quantity change
-  const handleQuantityChange = (id, delta) => {
-    setCartItems((prevItems) =>
-      prevItems.map((item) =>
-        item.id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) } // Quantity cannot go below 1
-          : item
-      )
-    );
-  };
+  // Assuming you have access to the current userId
+  // const userId = "your_user_id_here";
 
+  const handleQuantityChange = async (productId, delta) => {
+    // Find the current quantity of the item
+    // You would get this from your local state, e.g., your 'cart' array
+    const currentItem = cartItems.find(
+      (item) => item.productId._id === productId
+    );
+    if (!currentItem) return;
+
+    const newQuantity = currentItem.quantity + delta;
+
+    // Optional: Prevent quantity from going below 1
+    if (newQuantity < 1) {
+      // console.log("Will do it");
+      try {
+        const res = await axios.post(`${API_BASE_URL}/user/deleteFromCart`, {
+          productId,
+          userId,
+        });
+        console.log(res);
+        setCartItems(res.data.cartItem);
+      } catch (error) {
+        console.log(error);
+      }
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `${API_BASE_URL}/user/updateCartDetails`,
+        {
+          userId,
+          productId,
+          quantity: newQuantity,
+        }
+      );
+      console.log(response);
+      // setCartItems(response.data.cartItems);
+      if (Array.isArray(response.data.cartItem)) {
+        setCartItems(response.data.cartItem);
+      } else {
+        // If the data is not a valid array, set to an empty array
+        setCartItems([]);
+      }
+    } catch (error) {
+      console.error("Error updating quantity:", error);
+    }
+  };
   // Handle item removal
-  const handleRemoveItem = (id) => {
-    setCartItems((prevItems) => prevItems.filter((item) => item.id !== id));
+  const handleRemoveItem = async (id) => {
+    try {
+      const res = await axios.post(`${API_BASE_URL}/user/deleteFromCart`, {
+        productId: id,
+        userId,
+      });
+      console.log(res);
+      setCartItems(res.data.cartItem);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   // Handle checkout/payment
@@ -139,10 +182,11 @@ const Cart = () => {
     // In a real application, you would integrate with a payment gateway here.
     // For now, it's just a placeholder.
     alert("Proceeding to payment for $" + totalAmount.toFixed(2));
+    console.log(user);
     // navigate('/checkout'); // Example: navigate to a checkout page
   };
 
-  if (loading) {
+  if (loading || itemLoading) {
     return (
       <>
         <Header />
@@ -193,7 +237,7 @@ const Cart = () => {
               Your cart is empty. Start shopping now!
             </p>
             <Button variant="cta" size="lg" asChild>
-              <Link to="/explore">
+              <Link to="/">
                 Continue Shopping
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
@@ -205,22 +249,25 @@ const Cart = () => {
             <div className="lg:col-span-2 space-y-4">
               {cartItems.map((item) => (
                 <Card
-                  key={item.id}
+                  key={item._id}
                   className="flex items-center p-4 bg-card/50 border-border/50 shadow-md"
                 >
                   <img
-                    src={item.image}
-                    alt={item.name}
+                    src={item.productId.images[0]}
+                    alt={item.productId.name}
                     className="w-24 h-24 object-cover rounded-md mr-4 border border-border/50"
                   />
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 items-center">
                     <div>
                       <h3 className="font-semibold text-lg line-clamp-2">
-                        {item.name}
+                        <Link to={`/product/${item.productId._id}`}>
+                          {item.productId.name}
+                        </Link>
                       </h3>
                       <p className="text-accent font-bold">
-                        ${item.price.toFixed(2)}
+                        ₹{item.productId.price.toFixed(2)}
                       </p>
+                      <p className="text-accent font-bold">{item.size}</p>
                     </div>
                     <div className="flex items-center justify-start md:justify-end gap-3">
                       <div className="flex items-center border border-border/50 rounded-md">
@@ -228,7 +275,9 @@ const Cart = () => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-r-none"
-                          onClick={() => handleQuantityChange(item.id, -1)}
+                          onClick={() =>
+                            handleQuantityChange(item.productId._id, -1)
+                          }
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
@@ -242,7 +291,9 @@ const Cart = () => {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 rounded-l-none"
-                          onClick={() => handleQuantityChange(item.id, 1)}
+                          onClick={() =>
+                            handleQuantityChange(item.productId._id, 1)
+                          }
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -251,7 +302,7 @@ const Cart = () => {
                         variant="ghost"
                         size="icon"
                         className="text-destructive hover:bg-destructive/10"
-                        onClick={() => handleRemoveItem(item.id)}
+                        onClick={() => handleRemoveItem(item.productId._id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -271,7 +322,7 @@ const Cart = () => {
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-foreground/80">
                   <span>Subtotal ({cartItems.length} items)</span>
-                  <span>${totalAmount.toFixed(2)}</span>
+                  <span>₹{totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-foreground/80">
                   <span>Shipping</span>
@@ -279,7 +330,7 @@ const Cart = () => {
                 </div>
                 <div className="border-t border-border/50 pt-4 flex justify-between text-xl font-bold">
                   <span>Total</span>
-                  <span className="text-accent">${totalAmount.toFixed(2)}</span>
+                  <span className="text-accent">₹{totalAmount.toFixed(2)}</span>
                 </div>
                 <Button
                   variant="cta"
@@ -290,7 +341,7 @@ const Cart = () => {
                   Make Payment
                 </Button>
                 <Button variant="outline" className="w-full" asChild>
-                  <Link to="/explore">Continue Shopping</Link>
+                  <Link to="/">Continue Shopping</Link>
                 </Button>
               </CardContent>
             </Card>
